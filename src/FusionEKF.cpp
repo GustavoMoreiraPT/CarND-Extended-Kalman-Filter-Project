@@ -54,7 +54,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // first measurement
     cout << "EKF: " << endl;
-    ekf_.x_ = VectorXd(4);
+    VectorXd x(4);
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
 
@@ -63,12 +63,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
       //actually applying the formula to convert from polar to cartesian coordinates.
       //At this point vx and vy are set to 0 due to lack of information about it.
-      ekf_.x_ << rho * cos(phi), rho*sin(phi), 0, 0;
+      x << rho * cos(phi), rho*sin(phi), 0, 0;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       
       //initialize lidar data vector
-      ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
+      x << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
     }
 
     this->previous_timestamp_ = measurement_pack.timestamp_;
@@ -82,25 +82,33 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     assign high values to the matrix when representing these value, to show how uncertain
     about the velocity we are.
     */
-    ekf_.P_ = MatrixXd(4,4);
-    ekf_.P_ << 1, 0, 0, 0,
+    MatrixXd P(4,4);
+    P << 1, 0, 0, 0,
                0, 1, 0, 0,
                0, 0, 1000, 0,
                0, 0, 0, 1000;
 
     //The initial transition matrix F_
-    ekf_.F_ = MatrixXd(4, 4);
-    ekf_.F_ << 1, 0, 0, 0,
+    F = MatrixXd(4, 4);
+    F << 1, 0, 0, 0,
                0, 1, 0, 0,
                0, 0, 1, 0,
                0, 0, 0, 1;
 
     // Initialize measurement matrix for laser measurements
-    ekf_.H_ = Matrix(2, 4);
-    ekf_.H_ << 1, 0, 0, 0,
+    H_laser_ << 1, 0, 0, 0,
                0, 1, 0, 0;
 
-    //TODO: Pass matrices provided by Udacity from constructor to here.
+    MatrixXd Q(4,4);
+    
+    ekf_.Init( x, 
+        P, 
+        F, 
+        H_laser_, 
+        Hj_, 
+        R_laser_,
+        R_radar_, 
+        Q );
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
