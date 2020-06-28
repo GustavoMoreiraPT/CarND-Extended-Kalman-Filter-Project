@@ -106,7 +106,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         F, 
         H_laser_, 
         R_laser_,
-        R_radar_, 
         Q);
 
     // done initializing, no need to predict or update
@@ -154,12 +153,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    
-    ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+    this->ekf_.H_ = tools.CalculateJacobian(this->ekf_.x_):
+    this->ekf.R_ = R_radar_;
+    this->ekf_.UpdateEKF(measurement_pack.raw_measurements_);
 
   } else {
-    // TODO: Laser updates
-    ekf_.Update(measurement_pack.raw_measurements_);
+    this->ekf_.H_ = H_laser_;
+    this->ekf_.R_ = R_laser_;
+    this->ekf_.Update(measurement_pack.raw_measurements_);
 
   }
 
