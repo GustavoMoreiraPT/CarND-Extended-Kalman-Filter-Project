@@ -23,9 +23,9 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 }
 
 void KalmanFilter::Predict() {
-  /**
-   * TODO: predict the state
-   */
+  this->x_ = this->F_ _ this->x_;
+  MatrixXd Ft = this->F_.transpose();
+  this->P = this->F_ * this->P_ * Ft + this->Q_; 
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
