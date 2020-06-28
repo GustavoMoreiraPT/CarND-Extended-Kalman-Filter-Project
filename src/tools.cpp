@@ -13,14 +13,14 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
                               const vector<VectorXd> &ground_truth) {
  
  //Declare and initialize the rmse vector to be returned
- VectorXd rsme(4);
- rsme << 0,0,0,0;
+ VectorXd rmse(4);
+ rmse << 0,0,0,0;
 
  //estimation and ground truth vector should be of the same size and bigger than 0
  if(estimations.size() != ground_truth.size() 
     || estimations.size() == 0 
     || ground_truth.size() == 0){
-     return rsme;
+     return rmse;
  }
 
  //accumulate the residuals
@@ -29,16 +29,16 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     VectorXd residual = estimations[i] - ground_truth[i];
 
     residual = residual.array()*residual.array();
-    rmse = rsme + residual;
+    rmse = rmse + residual;
  }
 
  //calculate the mean
- rsme = rsme/estimations.size();
+ rmse = rmse/estimations.size();
 
  //calculate the squared root value
- rsme = rsme.array().sqrt();
+ rmse = rmse.array().sqrt();
 
- return rsme;
+ return rmse;
 }
 
 MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
