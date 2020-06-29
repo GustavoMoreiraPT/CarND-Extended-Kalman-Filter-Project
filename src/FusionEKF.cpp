@@ -21,7 +21,11 @@ FusionEKF::FusionEKF() {
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
-  //Hj_ = MatrixXd(3, 4);
+  Hj_ = MatrixXd(3, 4);
+
+   Hj_<< 1,1,0,0,
+      1,1,0,0,
+      1,1,1,1;
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
@@ -91,7 +95,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //The initial transition matrix F_
     MatrixXd F(4, 4);
     F << 1, 0, 0, 0,
-               0, 1, 0, 1,
+               0, 1, 0, 0,
                0, 0, 1, 0,
                0, 0, 0, 1;
 
@@ -133,7 +137,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // TODO: YOUR CODE HERE
     float dt_2 = dt * dt;
     float dt_3 = dt_2 * dt;
-    float dt_4 = dt_3 * dt;
+    float dt_4 = dt_2 * dt_2;
 
     // Modify the F matrix so that the time is integrated
     ekf_.F_(0, 2) = dt;
@@ -153,7 +157,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    this->ekf_.H_ = tools.CalculateJacobian(this->ekf_.x_);
+    Hj_ = tools.CalculateJacobian(this->ekf_.x_);
+    this->ekf_.H_ = Hj_;
     this->ekf_.R_ = R_radar_;
     this->ekf_.UpdateEKF(measurement_pack.raw_measurements_);
 
