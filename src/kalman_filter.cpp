@@ -31,17 +31,8 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z) {
   VectorXd z_pred = this->H_ * this->x_;
   VectorXd y = z - z_pred;
-  MatrixXd Ht = this->H_.transpose();
-  MatrixXd S = this->H_ * this->P_ * Ht + this->R_;
-  MatrixXd Si = S.inverse();
-  MatrixXd PHt = this->P_ * Ht;
-  MatrixXd K = PHt * Si;
 
-  //here we do the new estimation by updtating the values of matrix P and vector x_
-  this->x_ = this->x_ + (K * y);
-  long x_size = this->x_.size();
-  MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  this->P_ = (I - K * this->H_) * this->P_;
+  UpdateCommon(y);
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -58,7 +49,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     float rho_dot = 0;
 
     if(fabs(rho) > 0.001){
-     rho_dot = px*vx + py*vy;
+     rho_dot = (px*vx + py*vy) / rho;
 	}
 
     VectorXd h = VectorXd(3);
@@ -66,16 +57,26 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     h << rho, phi, rho_dot;
 
     VectorXd y = z - h;
+    
+    NormalizeAngle(y(1));
 
-    MatrixXd Ht = this->H_.transpose();
-    MatrixXd S = this->H_ * this->P_ * Ht + this->R_;
-    MatrixXd Si = S.inverse();
-    MatrixXd PHt = this->P_ * Ht;
-    MatrixXd K = PHt * Si;
+    UpdateCommon(y);
+}
 
-    //here we do the new estimation by updtating the values of matrix P and vector x_
-    this->x_ = this->x_ + (K * y);
-    long x_size = this->x_.size();
-    MatrixXd I = MatrixXd::Identity(x_size, x_size);
-    this->P_ = (I - K * this->H_) * this->P_;
+void KalmanFilter::NormalizeAngle(double& phi)
+{
+  phi = atan2(sin(phi), cos(phi));
+}
+
+//Because this piece of code is the same for both radar and laser measurements,
+//we can re-use the code in a function for both.
+// As Suggested by the Udacity reviewer of my previous submission.
+void KalmanFilter::UpdateCommon(const VectorXd& y)
+{
+  const MatrixXd PHt = P_ * H_.transpose();
+  const MatrixXd S = H_ * PHt + R_;
+  const MatrixXd K = PHt * S.inverse();
+
+  x_ += K * y;
+  P_ -= K * H_ * P_;
 }
