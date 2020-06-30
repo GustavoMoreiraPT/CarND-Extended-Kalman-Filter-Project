@@ -46,6 +46,18 @@ class KalmanFilter {
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+  /**
+    Updates the part of the kalman filter equation that is independent
+    of type of sensor used.
+    @param y the y vector
+  */
+  void UpdateCommon(const Eigen::VectorXd &y);
+
+  /*
+  Normalizes the angle phi
+  **/
+  void NormalizeAngle(double& phi);
+
   // state vector
   Eigen::VectorXd x_;
 
